@@ -1,11 +1,14 @@
--- إضافة مكتبة Rayfield
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
--- إنشاء نافذة
+local enabledKey = "Insert" -- مفتاح لتمكين/تعطيل السكربت
+local isEnabled = true
+local aimAtNearestPlayer = true -- قم بتعديل هذا السطر ليكون ضروريًا
+local hitboxEnabled = false
+
 local Window = Rayfield:CreateWindow({
-    Name = "by abo_3le ",
+    Name = "Script no scoop by abo_3le ",
     LoadingTitle = "Loading...",
-    LoadingSubtitle = "by zioteam",
+    LoadingSubtitle = "team zio",
     ConfigurationSaving = {
        Enabled = true,
        FolderName = nil,
@@ -28,10 +31,8 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- إنشاء تبويب جديد
 local PlayerTab = Window:CreateTab("Player", 4483362458)
 
--- دالة للعثور على أقرب لاعب
 local function findNearestPlayer()
     local player = game.Players.LocalPlayer
     local nearestPlayer = nil
@@ -50,37 +51,59 @@ local function findNearestPlayer()
     return nearestPlayer
 end
 
--- متغيرات
-local newHitboxSize = Vector3.new(20, 20, 20)
-local aimAtNearestPlayer = false
+local newHitboxSize = Vector3.new(50, 50, 50)
 
--- إضافة شريط تمرير (Slider) لتحديد حجم الـHitbox
 PlayerTab:CreateSlider({
     Name = "Hitbox Size",
-    Range = {50, 50}, -- نطاق القيم المسموح بها
-    Increment = 1, -- الزيادة بمقدار 1
+    Range = {10, 100},
+    Increment = 1,
     Suffix = "Size",
-    CurrentValue = 50,
+    CurrentValue = 20,
     Callback = function(value)
         newHitboxSize = Vector3.new(value, value, value)
     end
 })
 
--- إضافة زر لتفعيل/إيقاف التوجيه لأقرب لاعب
 PlayerTab:CreateToggle({
-    Name = "Aim bot",
-    CurrentValue = false,
+    Name = "Aim bot DONT OF AIM BOT WELL CRACH SCRIPT",
+    CurrentValue = aimAtNearestPlayer,
     Callback = function(value)
         aimAtNearestPlayer = value
     end
 })
 
--- إضافة زر لتغيير حجم الـHitbox
-PlayerTab:CreateButton({
-    Name = " Hitbox",
-    Callback = function()
-        game:GetService("RunService").RenderStepped:Connect(function()
-            local player = game.Players.LocalPlayer
+PlayerTab:CreateToggle({
+    Name = "Enable Hitbox",
+    CurrentValue = false,
+    Callback = function(value)
+        hitboxEnabled = value
+    end
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode[enabledKey] then
+        isEnabled = not isEnabled
+        if isEnabled then
+            print("Script enabled.")
+        else
+            print("Script disabled.")
+        end
+    end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if isEnabled then
+        local player = game.Players.LocalPlayer
+
+        if aimAtNearestPlayer then
+            local nearestPlayer = findNearestPlayer()
+            if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
+                local camera = workspace.CurrentCamera
+                camera.CFrame = CFrame.new(camera.CFrame.Position, nearestPlayer.Character.Head.Position)
+            end
+        end
+
+        if hitboxEnabled then
             for _, enemy in pairs(game.Players:GetPlayers()) do
                 if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                     local hrp = enemy.Character.HumanoidRootPart
@@ -89,27 +112,13 @@ PlayerTab:CreateButton({
                     hrp.CanCollide = false
                 end
             end
-        end)
-    end
-})
-
--- تحديث الكاميرا لتوجيهها نحو رأس أقرب لاعب
-game:GetService("RunService").RenderStepped:Connect(function()
-    if aimAtNearestPlayer then
-        local player = game.Players.LocalPlayer
-        local nearestPlayer = findNearestPlayer()
-
-        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
-            local camera = workspace.CurrentCamera
-            camera.CFrame = CFrame.new(camera.CFrame.Position, nearestPlayer.Character.Head.Position)
         end
     end
 end)
 
--- الانتقال إلى لاعب آخر عند موت اللاعب الحالي
 game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
     character:WaitForChild("Humanoid").Died:Connect(function()
-        wait(1) -- انتظار ثواني قبل الانتقال للاعب آخر
+        wait(1)
         local nearestPlayer = findNearestPlayer()
         if nearestPlayer then
             local player = game.Players.LocalPlayer
