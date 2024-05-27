@@ -1,37 +1,105 @@
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local enabledKey = "Insert" -- مفتاح لتمكين/تعطيل السكربت
-local isEnabled = true
-local aimAtNearestPlayer = true -- قم بتعديل هذا السطر ليكون ضروريًا
+local Window = OrionLib:MakeWindow({Name = "No Scope  Script by abo_3le ", HidePremium = false, SaveConfig = true, ConfigFolder = "CombinedConfig"})
+
+-- Hitbox Tab
+local HitboxTab = Window:MakeTab({Name = "Hitbox", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+local newHitboxSize = Vector3.new(20, 20, 20)
 local hitboxEnabled = false
 
-local Window = Rayfield:CreateWindow({
-    Name = "Script no scoop by abo_3le ",
-    LoadingTitle = "Loading...",
-    LoadingSubtitle = "team zio",
-    ConfigurationSaving = {
-       Enabled = true,
-       FolderName = nil,
-       FileName = "ExampleConfig"
-    },
-    Discord = {
-       Enabled = false,
-       Invite = "noinvitelink",
-       RememberJoins = true
-    },
-    KeySystem = true,
-    KeySettings = {
-       Title = "Key System",
-       Subtitle = "Key System",
-       Note = "Join the discord (discord.gg/abcdefg)",
-       FileName = "KeyFile",
-       SaveKey = true,
-       GrabKeyFromSite = false,
-       Key = "Key2020"
-    }
+HitboxTab:AddSlider({
+    Name = "Hitbox Size",
+    Min = 10,
+    Max = 100,
+    Default = 20,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Size",
+    Callback = function(value)
+        newHitboxSize = Vector3.new(value, value, value)
+    end
 })
 
-local PlayerTab = Window:CreateTab("Player", 4483362458)
+HitboxTab:AddToggle({
+    Name = "Enable Hitbox",
+    Default = false,
+    Callback = function(value)
+        hitboxEnabled = value
+    end
+})
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if hitboxEnabled then
+        local player = game.Players.LocalPlayer
+        for _, enemy in pairs(game.Players:GetPlayers()) do
+            if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = enemy.Character.HumanoidRootPart
+                hrp.Size = newHitboxSize
+                hrp.Transparency = 0.5
+                hrp.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- ESP Tab
+local ESPTab = Window:MakeTab({Name = "ESP", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+local espEnabled = false
+
+ESPTab:AddToggle({
+    Name = "Enable ESP",
+    Default = false,
+    Callback = function(value)
+        espEnabled = value
+    end
+})
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if espEnabled then
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Head") then
+                local head = player.Character.Head
+                if not head:FindFirstChild("ESP") then
+                    local billboard = Instance.new("BillboardGui", head)
+                    billboard.Name = "ESP"
+                    billboard.Adornee = head
+                    billboard.Size = UDim2.new(1, 0, 1, 0)
+                    billboard.AlwaysOnTop = true
+
+                    local textLabel = Instance.new("TextLabel", billboard)
+                    textLabel.Text = player.Name
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.TextColor3 = Color3.new(1, 0, 0)
+                    textLabel.BackgroundTransparency = 1
+                end
+            end
+        end
+    else
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Head") then
+                local head = player.Character.Head
+                if head:FindFirstChild("ESP") then
+                    head.ESP:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- AIM Tab
+local AIMTab = Window:MakeTab({Name = "AIM", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+local aimAtNearestPlayer = false
+
+AIMTab:AddToggle({
+    Name = "Aim at Nearest Player",
+    Default = false,
+    Callback = function(value)
+        aimAtNearestPlayer = value
+    end
+})
 
 local function findNearestPlayer()
     local player = game.Players.LocalPlayer
@@ -51,80 +119,15 @@ local function findNearestPlayer()
     return nearestPlayer
 end
 
-local newHitboxSize = Vector3.new(50, 50, 50)
-
-PlayerTab:CreateSlider({
-    Name = "Hitbox Size",
-    Range = {10, 100},
-    Increment = 1,
-    Suffix = "Size",
-    CurrentValue = 20,
-    Callback = function(value)
-        newHitboxSize = Vector3.new(value, value, value)
-    end
-})
-
-PlayerTab:CreateToggle({
-    Name = "Aim bot DONT OF AIM BOT WELL CRACH SCRIPT",
-    CurrentValue = aimAtNearestPlayer,
-    Callback = function(value)
-        aimAtNearestPlayer = value
-    end
-})
-
-PlayerTab:CreateToggle({
-    Name = "Enable Hitbox",
-    CurrentValue = false,
-    Callback = function(value)
-        hitboxEnabled = value
-    end
-})
-
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode[enabledKey] then
-        isEnabled = not isEnabled
-        if isEnabled then
-            print("Script enabled.")
-        else
-            print("Script disabled.")
-        end
-    end
-end)
-
 game:GetService("RunService").RenderStepped:Connect(function()
-    if isEnabled then
+    if aimAtNearestPlayer then
         local player = game.Players.LocalPlayer
-
-        if aimAtNearestPlayer then
-            local nearestPlayer = findNearestPlayer()
-            if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
-                local camera = workspace.CurrentCamera
-                camera.CFrame = CFrame.new(camera.CFrame.Position, nearestPlayer.Character.Head.Position)
-            end
-        end
-
-        if hitboxEnabled then
-            for _, enemy in pairs(game.Players:GetPlayers()) do
-                if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = enemy.Character.HumanoidRootPart
-                    hrp.Size = newHitboxSize
-                    hrp.Transparency = 0.5
-                    hrp.CanCollide = false
-                end
-            end
+        local nearestPlayer = findNearestPlayer()
+        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
+            local camera = workspace.CurrentCamera
+            camera.CFrame = CFrame.new(camera.CFrame.Position, nearestPlayer.Character.Head.Position)
         end
     end
 end)
 
-game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-    character:WaitForChild("Humanoid").Died:Connect(function()
-        wait(1)
-        local nearestPlayer = findNearestPlayer()
-        if nearestPlayer then
-            local player = game.Players.LocalPlayer
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character:SetPrimaryPartCFrame(nearestPlayer.Character.HumanoidRootPart.CFrame)
-            end
-        end
-    end)
-end)
+OrionLib:Init()
