@@ -2,7 +2,7 @@
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
-    Title = "VEP HUB",
+    Title = "VEP Hub v1 made abo_3le ",
     SubTitle = "No Scope Arcade Script",
     SaveFolder = "Redz Config"
 })
