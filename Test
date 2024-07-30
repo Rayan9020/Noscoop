@@ -1,0 +1,112 @@
+-- تحميل مكتبة Vep
+local VLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/vep1032/VepStuff/main/VL"))()
+
+-- إنشاء نافذة رئيسية
+local w = VLib:Window("VEP HUB", "No Scope Arcade Script", "G")
+
+-- إنشاء تبويب Hitbox
+local hitboxTab = w:Tab("Hitbox")
+
+local newHitboxSize = Vector3.new(20, 20, 20)
+local hitboxEnabled = false
+
+hitboxTab:Slider("Hitbox Size", 10, 100, 20, function(value)
+    newHitboxSize = Vector3.new(value, value, value)
+end)
+
+hitboxTab:Toggle("Enable Hitbox", function(value)
+    hitboxEnabled = value
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if hitboxEnabled then
+        local player = game.Players.LocalPlayer
+        for _, enemy in pairs(game.Players:GetPlayers()) do
+            if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = enemy.Character.HumanoidRootPart
+                hrp.Size = newHitboxSize
+                hrp.Transparency = 0.5
+                hrp.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- إنشاء تبويب ESP
+local esptab = w:Tab("ESP")
+
+local espEnabled = false
+
+esptab:Toggle("Enable ESP", function(value)
+    espEnabled = value
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if espEnabled then
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Head") then
+                local head = player.Character.Head
+                if not head:FindFirstChild("ESP") then
+                    local billboard = Instance.new("BillboardGui", head)
+                    billboard.Name = "ESP"
+                    billboard.Adornee = head
+                    billboard.Size = UDim2.new(1, 0, 1, 0)
+                    billboard.AlwaysOnTop = true
+
+                    local textLabel = Instance.new("TextLabel", billboard)
+                    textLabel.Text = player.Name
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.TextColor3 = Color3.new(1, 0, 0)
+                    textLabel.BackgroundTransparency = 1
+                end
+            end
+        end
+    else
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Head") then
+                local head = player.Character.Head
+                if head:FindFirstChild("ESP") then
+                    head.ESP:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- إنشاء تبويب AIM
+local aimTab = w:Tab("AIM")
+
+local aimAtNearestPlayer = false
+
+aimTab:Toggle("Aim at Nearest Player", function(value)
+    aimAtNearestPlayer = value
+end)
+
+local function findNearestPlayer()
+    local player = game.Players.LocalPlayer
+    local nearestPlayer = nil
+    local shortestDistance = math.huge
+
+    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+        if targetPlayer ~= player and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+            local distance = (player.Character.Head.Position - targetPlayer.Character.Head.Position).magnitude
+            if distance < shortestDistance then
+                nearestPlayer = targetPlayer
+                shortestDistance = distance
+            end
+        end
+    end
+
+    return nearestPlayer
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if aimAtNearestPlayer then
+        local player = game.Players.LocalPlayer
+        local nearestPlayer = findNearestPlayer()
+        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
+            local camera = workspace.CurrentCamera
+            camera.CFrame = CFrame.new(camera.CFrame.Position, nearestPlayer.Character.Head.Position)
+        end
+    end
+end)
